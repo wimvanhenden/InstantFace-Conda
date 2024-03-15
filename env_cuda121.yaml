@@ -1,0 +1,15 @@
+name: instant_id_121
+channels:
+  - defaults
+  - conda-forge
+  - nvidia/label/cuda-12.1.0
+
+dependencies:
+  - python==3.10
+  - cuda-toolkit
+  - cudnn
+  - zlib-wapi
+  - ffmpeg
+  - pip
+  - pip:
+      - -r requirements_cuda121.txt
