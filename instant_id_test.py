@@ -22,10 +22,8 @@ controlnet_path = f'./checkpoints/ControlNetModel'
 # load IdentityNet
 controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch.float16)
 
-
 #base_model = 'wangqixun/YamerMIX_v8'
 base_model = 'stabilityai/stable-diffusion-xl-base-1.0'
-
 
 pipe = StableDiffusionXLInstantIDPipeline.from_pretrained(
     base_model,
@@ -37,7 +35,7 @@ pipe.cuda()
 # load Lora
 # lora_safetensors_path = "./lora/Cute_3D_Cartoon.safetensors"
 pipe.load_lora_weights("./lora/", weight_name="Cute_3D_Cartoon.safetensors")
-pipe.fuse_lora(lora_scale=0.7)
+pipe.fuse_lora(lora_scale=0.65)
 
 # load adapter
 pipe.load_ip_adapter_instantid(face_adapter)
@@ -55,11 +53,11 @@ negative_prompt = "ugly, deformed, noisy, blurry, low contrast, realism, photore
 
 # generate image
 image = pipe(
-    prompt,
+    prompt=prompt,
     negative_prompt=negative_prompt,
     image_embeds=face_emb,
     image=face_kps,
-    controlnet_conditioning_scale=0.7,
+    controlnet_conditioning_scale=0.65,
     ip_adapter_scale=0.2,
     guidance_scale=7.5,
     num_inference_steps=35

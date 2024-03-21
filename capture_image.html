@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webcam Capture</title>
+<style>
+  body { text-align: center; }
+  #camera {
+    width: 300px; /* Adjust this value to change the size of the square */
+    height: 300px; /* Adjust this value to change the size of the square */
+    object-fit: cover; /* This will ensure the video fills the square area, cropping excess parts */
+    margin: 0 auto; /* Center the video element horizontally */
+  }
+  canvas { display: none; }
+</style>
+</head>
+<body>
+
+<video id="camera" autoplay></video>
+<button id="capture">Capture</button>
+<canvas id="canvas"></canvas>
+<img id="photo" alt="The screen capture will appear in this box.">
+
+<script>
+  const camera = document.getElementById('camera');
+  const canvas = document.getElementById('canvas');
+  const photo = document.getElementById('photo');
+  const captureButton = document.getElementById('capture');
+
+  const constraints = {
+    video: {
+      width: { ideal: 4096 },
+      height: { ideal: 4096 },
+      aspectRatio: 1
+    }
+  };
+
+  async function setupCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    camera.srcObject = stream;
+    camera.play();
+  }
+
+  captureButton.addEventListener('click', () => {
+    const context = canvas.getContext('2d');
+    if (camera.srcObject) {
+      const track = camera.srcObject.getVideoTracks()[0];
+      const settings = track.getSettings();
+      const size = Math.min(settings.width, settings.height); // Ensure the canvas is square by using the smaller dimension
+      canvas.width = size;
+      canvas.height = size;
+      context.drawImage(camera, (settings.width - size) / 2, (settings.height - size) / 2, size, size, 0, 0, size, size);
+      photo.src = canvas.toDataURL('image/png');
+      photo.style.display = 'block';
+    }
+  });
+
+  setupCamera().catch(console.error);
+</script>
+
+</body>
+</html>
