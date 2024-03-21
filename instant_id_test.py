@@ -8,7 +8,20 @@ import numpy as np
 from PIL import Image
 
 from insightface.app import FaceAnalysis
-from pipeline_stable_diffusion_xl_instantid_full import StableDiffusionXLInstantIDPipeline, draw_kps
+from pipeline_stable_diffusion_xl_instantid import StableDiffusionXLInstantIDPipeline, draw_kps
+
+
+
+def image_grid(imgs, rows, cols):
+    assert len(imgs) == rows*cols
+
+    w, h = imgs[0].size
+    grid = Image.new('RGB', size=(cols*w, rows*h))
+    grid_w, grid_h = grid.size
+    
+    for i, img in enumerate(imgs):
+        grid.paste(img, box=(i%cols*w, i//cols*h))
+    return grid
 
 # prepare 'antelopev2' under ./models
 app = FaceAnalysis(name='antelopev2', root='./', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
@@ -39,20 +52,26 @@ pipe.fuse_lora(lora_scale=0.65)
 
 # load adapter
 pipe.load_ip_adapter_instantid(face_adapter)
-face_image = load_image("./examples/buddy.jpg")
 
 # prepare face emb
+face_image = load_image("./examples/musk_resize.jpeg")
 face_info = app.get(cv2.cvtColor(np.array(face_image), cv2.COLOR_RGB2BGR))
 face_info = sorted(face_info, key=lambda x:(x['bbox'][2]-x['bbox'][0])*(x['bbox'][3]-x['bbox'][1]))[-1]  # only use the maximum face
 face_emb = face_info['embedding']
-face_kps = draw_kps(face_image, face_info['kps'])
+
+# prepare face kps
+face_pose = load_image("./examples/wim_far.png")
+face_info_p = app.get(cv2.cvtColor(np.array(face_pose), cv2.COLOR_RGB2BGR))
+face_info_p = sorted(face_info_p, key=lambda x:(x['bbox'][2]-x['bbox'][0])*(x['bbox'][3]-x['bbox'][1]))[-1]  # only use the maximum face
+face_kps = draw_kps(face_pose, face_info_p['kps'])
 
 # prompt
 prompt = "cute easter male bunny"
 negative_prompt = "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, vibrant, colorful"
 
 # generate image
-image = pipe(
+images = pipe(
+    num_images_per_prompt=4,
     prompt=prompt,
     negative_prompt=negative_prompt,
     image_embeds=face_emb,
@@ -61,6 +80,9 @@ image = pipe(
     ip_adapter_scale=0.2,
     guidance_scale=7.5,
     num_inference_steps=35
-).images[0] 
+).images 
 
-image.save("instant_id_test.jpg")
+grid = image_grid(images, rows=2, cols=2)
+#image.save("instant_id_test.jpg")
+
+grid.show()
