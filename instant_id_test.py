@@ -48,16 +48,18 @@ pipe.cuda()
 # load Lora
 # lora_safetensors_path = "./lora/Cute_3D_Cartoon.safetensors"
 pipe.load_lora_weights("./lora/", weight_name="Cute_3D_Cartoon.safetensors")
-pipe.fuse_lora(lora_scale=0.65)
+pipe.fuse_lora(lora_scale=0.85)
 
 # load adapter
 pipe.load_ip_adapter_instantid(face_adapter)
 
 # prepare face emb
-face_image = load_image("./examples/musk_resize.jpeg")
+face_image = load_image("./examples/wim_close.png")
 face_info = app.get(cv2.cvtColor(np.array(face_image), cv2.COLOR_RGB2BGR))
 face_info = sorted(face_info, key=lambda x:(x['bbox'][2]-x['bbox'][0])*(x['bbox'][3]-x['bbox'][1]))[-1]  # only use the maximum face
 face_emb = face_info['embedding']
+
+print(face_emb)
 
 # prepare face kps
 face_pose = load_image("./examples/wim_far.png")
@@ -67,7 +69,7 @@ face_kps = draw_kps(face_pose, face_info_p['kps'])
 
 # prompt
 prompt = "cute easter male bunny"
-negative_prompt = "ugly, deformed, noisy, blurry, low contrast, realism, photorealistic, vibrant, colorful"
+negative_prompt = ""
 
 # generate image
 images = pipe(
@@ -76,8 +78,8 @@ images = pipe(
     negative_prompt=negative_prompt,
     image_embeds=face_emb,
     image=face_kps,
-    controlnet_conditioning_scale=0.65,
-    ip_adapter_scale=0.2,
+    controlnet_conditioning_scale=0.7,
+    ip_adapter_scale=0.1,
     guidance_scale=7.5,
     num_inference_steps=35
 ).images 
