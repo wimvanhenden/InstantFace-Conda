@@ -1,5 +1,11 @@
 # InstantID Conda
 
+### Install
+
+```bash
+  conda create -f env_cuda121.yaml
+```
+
 ### Models
 
 #### ControlNet and InstantID
